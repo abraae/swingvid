@@ -1,75 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Video Recorder</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
-        }
-        video {
-            border: 2px solid #333;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+    <title>RecordRTC Example</title>
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
 <body>
-    <video id="video" width="640" height="480" autoplay muted></video>
-    <button id="playbackButton">Play Last 5 Seconds</button>
-    <video id="playback" width="640" height="480" controls></video>
+    <video id="video" controls autoplay></video>
+    <button id="startRecording">Start Recording</button>
+    <button id="stopRecording" disabled>Stop Recording</button>
+    <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
-        (async function() {
-            const video = document.getElementById('video');
-            const playbackButton = document.getElementById('playbackButton');
-            const playbackVideo = document.getElementById('playback');
-            let mediaRecorder;
-            let recordedChunks = [];
+        let video = document.getElementById('video');
+        let startRecordingButton = document.getElementById('startRecording');
+        let stopRecordingButton = document.getElementById('stopRecording');
+        let downloadLink = document.getElementById('downloadLink');
 
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
+        let recorder;
+        let stream;
 
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8' });
+        startRecordingButton.onclick = async () => {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            video.srcObject = stream;
 
-                mediaRecorder.ondataavailable = function(event) {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
-                    }
-                };
-
-                mediaRecorder.start(1000); // Collect data every second
-            } catch (error) {
-                console.error('Error accessing the webcam:', error);
-            }
-
-            playbackButton.addEventListener('click', () => {
-                if (recordedChunks.length === 0) {
-                    alert('No video recorded yet.');
-                    return;
-                }
-
-                // Get the last 5 seconds of video
-                const lastFiveSecondsChunks = recordedChunks.slice(-5);
-                const blob = new Blob(lastFiveSecondsChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                playbackVideo.src = url;
-                playbackVideo.play();
+            recorder = new RecordRTC(stream, {
+                type: 'video'
             });
-        })();
+
+            recorder.startRecording();
+            startRecordingButton.disabled = true;
+            stopRecordingButton.disabled = false;
+        };
+
+        stopRecordingButton.onclick = () => {
+            recorder.stopRecording(() => {
+                let blob = recorder.getBlob();
+                let url = URL.createObjectURL(blob);
+                
+                downloadLink.href = url;
+                downloadLink.download = 'recorded-video.webm';
+                downloadLink.style.display = 'block';
+                video.srcObject = null;
+                video.src = url;
+
+                stream.getTracks().forEach(track => track.stop());
+                startRecordingButton.disabled = false;
+                stopRecordingButton.disabled = true;
+            });
+        };
     </script>
 </body>
 </html>
