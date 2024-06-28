@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Video Capture</title>
+    <title>Webcam Video Recorder</title>
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
@@ -16,22 +17,58 @@
         video {
             border: 2px solid #333;
             border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <video id="video" width="640" height="480" autoplay></video>
+    <video id="video" width="640" height="480" autoplay muted></video>
+    <button id="playbackButton">Play Last 5 Seconds</button>
+    <video id="playback" width="640" height="480" controls></video>
 
     <script>
         (async function() {
             const video = document.getElementById('video');
+            const playbackButton = document.getElementById('playbackButton');
+            const playbackVideo = document.getElementById('playback');
+            let mediaRecorder;
+            let recordedChunks = [];
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
+
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.start(1000); // Collect data every second
             } catch (error) {
                 console.error('Error accessing the webcam:', error);
             }
+
+            playbackButton.addEventListener('click', () => {
+                if (recordedChunks.length === 0) {
+                    alert('No video recorded yet.');
+                    return;
+                }
+
+                // Get the last 5 seconds of video
+                const lastFiveSecondsChunks = recordedChunks.slice(-5);
+                const blob = new Blob(lastFiveSecondsChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                playbackVideo.src = url;
+                playbackVideo.play();
+            });
         })();
     </script>
 </body>
