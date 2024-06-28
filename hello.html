@@ -18,24 +18,36 @@
 
         let recorder;
         let stream;
+        let recordedBlobs = [];
+        let recordingStartTime;
 
         startRecordingButton.onclick = async () => {
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             video.srcObject = stream;
 
+            recordedBlobs = [];
             recorder = new RecordRTC(stream, {
-                type: 'video'
+                type: 'video',
+                mimeType: 'video/webm;codecs=vp8',
+                timeSlice: 1000, // Record in slices of 1 second
+                ondataavailable: (blob) => {
+                    recordedBlobs.push(blob);
+                    if (recordedBlobs.length > 3) {
+                        recordedBlobs.shift(); // Keep only the last 3 seconds
+                    }
+                }
             });
 
             recorder.startRecording();
+            recordingStartTime = Date.now();
             startRecordingButton.disabled = true;
             stopRecordingButton.disabled = false;
         };
 
         stopRecordingButton.onclick = () => {
             recorder.stopRecording(() => {
-                let blob = recorder.getBlob();
-                let url = URL.createObjectURL(blob);
+                let finalBlob = new Blob(recordedBlobs, { type: 'video/webm' });
+                let url = URL.createObjectURL(finalBlob);
                 
                 downloadLink.href = url;
                 downloadLink.download = 'recorded-video.webm';
