@@ -41,34 +41,15 @@
             recorder.stopRecording(() => {
                 // Combine only the last four recorded blobs
                 let lastFourBlobs = recordedBlobs.slice(-4);
-
-                // Use MediaSource API for seamless playback
-                let mediaSource = new MediaSource();
-                video.src = URL.createObjectURL(mediaSource);
-
-                mediaSource.addEventListener('sourceopen', () => {
-                    let sourceBuffer = mediaSource.addSourceBuffer('video/webm; codecs="vp8, vorbis"');
-
-                    let appendNextBlob = (index) => {
-                        if (index < lastFourBlobs.length) {
-                            let reader = new FileReader();
-                            reader.onload = () => {
-                                sourceBuffer.appendBuffer(new Uint8Array(reader.result));
-                                sourceBuffer.addEventListener('updateend', () => appendNextBlob(index + 1), { once: true });
-                            };
-                            reader.readAsArrayBuffer(lastFourBlobs[index]);
-                        } else {
-                            mediaSource.endOfStream();
-                        }
-                    };
-
-                    appendNextBlob(0);
-                });
-
-                // Create a downloadable link for the combined Blobs
                 let combinedBlobs = new Blob(lastFourBlobs, { type: 'video/webm' });
-                let url = URL.createObjectURL(combinedBlobs);
 
+                // Create URL for combined Blob
+                let url = URL.createObjectURL(combinedBlobs);
+                video.srcObject = null;
+                video.src = url;
+                video.controls = true;
+
+                // Create downloadable link
                 downloadLink.href = url;
                 downloadLink.download = 'recorded-video.webm';
                 downloadLink.style.display = 'block';
