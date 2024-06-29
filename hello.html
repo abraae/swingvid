@@ -3,11 +3,38 @@
 <head>
     <title>RecordRTC with timeSlice, Delay, and Loop Playback</title>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            max-height: calc(100vh - 60px); /* Adjust to ensure buttons are visible */
+        }
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        a {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <video id="video" controls autoplay></video>
-    <button id="startRecording">Start Recording</button>
-    <button id="stopRecording" disabled>Stop Recording</button>
+    <div class="controls">
+        <button id="startRecording">Start Recording</button>
+        <button id="stopRecording" disabled>Stop Recording</button>
+    </div>
     <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
