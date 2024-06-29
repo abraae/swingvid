@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RecordRTC with timeSlice</title>
+    <title>RecordRTC with Selective Slices Combination</title>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
 <body>
@@ -39,20 +39,26 @@
 
         stopRecordingButton.onclick = () => {
             recorder.stopRecording(() => {
-                // Combine only the last four recorded blobs
-                let lastFourBlobs = recordedBlobs.slice(-4);
-                let combinedBlobs = new Blob(lastFourBlobs, { type: 'video/webm' });
+                // Select the first slice and the last four slices
+                let selectedBlobs = [];
+                if (recordedBlobs.length > 0) {
+                    selectedBlobs.push(recordedBlobs[0]);
+                }
+                if (recordedBlobs.length > 4) {
+                    selectedBlobs.push(...recordedBlobs.slice(-4));
+                } else {
+                    selectedBlobs.push(...recordedBlobs);
+                }
 
-                // Create URL for combined Blob
-                let url = URL.createObjectURL(combinedBlobs);
-                video.srcObject = null;
-                video.src = url;
-                video.controls = true;
+                // Combine selected blobs into one
+                let superBuffer = new Blob(selectedBlobs, { type: 'video/webm' });
+                let url = URL.createObjectURL(superBuffer);
 
-                // Create downloadable link
                 downloadLink.href = url;
                 downloadLink.download = 'recorded-video.webm';
                 downloadLink.style.display = 'block';
+                video.srcObject = null;
+                video.src = url;
 
                 stream.getTracks().forEach(track => track.stop());
                 startRecordingButton.disabled = false;
