@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RecordRTC with timeSlice and Playback Offset</title>
+    <title>RecordRTC with timeSlice and Loop Playback</title>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
 <body>
@@ -54,6 +54,11 @@
                     if (video.duration > 5) {
                         video.currentTime = 5;
                     }
+                };
+
+                video.onended = () => {
+                    video.currentTime = 5;
+                    video.play();
                 };
 
                 stream.getTracks().forEach(track => track.stop());
