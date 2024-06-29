@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RecordRTC with timeSlice and Loop Playback</title>
+    <title>RecordRTC with timeSlice, Delay, and Loop Playback</title>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
 <body>
@@ -38,33 +38,36 @@
         };
 
         stopRecordingButton.onclick = () => {
-            recorder.stopRecording(() => {
-                // Combine all recorded blobs into one
-                let superBuffer = new Blob(recordedBlobs, { type: 'video/webm' });
-                let url = URL.createObjectURL(superBuffer);
+            stopRecordingButton.disabled = true;
+            // Delay stopping the recording by 3 seconds
+            setTimeout(() => {
+                recorder.stopRecording(() => {
+                    // Combine all recorded blobs into one
+                    let superBuffer = new Blob(recordedBlobs, { type: 'video/webm' });
+                    let url = URL.createObjectURL(superBuffer);
 
-                downloadLink.href = url;
-                downloadLink.download = 'recorded-video.webm';
-                downloadLink.style.display = 'block';
-                video.srcObject = null;
-                video.src = url;
+                    downloadLink.href = url;
+                    downloadLink.download = 'recorded-video.webm';
+                    downloadLink.style.display = 'block';
+                    video.srcObject = null;
+                    video.src = url;
 
-                // Set up the video to start playing 5 seconds into the recording
-                video.onloadedmetadata = () => {
-                    if (video.duration > 5) {
+                    // Set up the video to start playing 5 seconds into the recording
+                    video.onloadedmetadata = () => {
+                        if (video.duration > 5) {
+                            video.currentTime = 5;
+                        }
+                    };
+
+                    video.onended = () => {
                         video.currentTime = 5;
-                    }
-                };
+                        video.play();
+                    };
 
-                video.onended = () => {
-                    video.currentTime = 5;
-                    video.play();
-                };
-
-                stream.getTracks().forEach(track => track.stop());
-                startRecordingButton.disabled = false;
-                stopRecordingButton.disabled = true;
-            });
+                    stream.getTracks().forEach(track => track.stop());
+                    startRecordingButton.disabled = false;
+                });
+            }, 3000); // 3000 milliseconds delay
         };
     </script>
 </body>
