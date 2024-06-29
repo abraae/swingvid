@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RecordRTC with Selective Slices Combination</title>
+    <title>RecordRTC with timeSlice and Playback Offset</title>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
 <body>
@@ -39,19 +39,8 @@
 
         stopRecordingButton.onclick = () => {
             recorder.stopRecording(() => {
-                // Select the first slice and the last four slices
-                let selectedBlobs = [];
-                if (recordedBlobs.length > 0) {
-                    selectedBlobs.push(recordedBlobs[0]);
-                }
-                if (recordedBlobs.length > 4) {
-                    selectedBlobs.push(...recordedBlobs.slice(-4));
-                } else {
-                    selectedBlobs.push(...recordedBlobs);
-                }
-
-                // Combine selected blobs into one
-                let superBuffer = new Blob(selectedBlobs, { type: 'video/webm' });
+                // Combine all recorded blobs into one
+                let superBuffer = new Blob(recordedBlobs, { type: 'video/webm' });
                 let url = URL.createObjectURL(superBuffer);
 
                 downloadLink.href = url;
@@ -59,6 +48,13 @@
                 downloadLink.style.display = 'block';
                 video.srcObject = null;
                 video.src = url;
+
+                // Set up the video to start playing 5 seconds into the recording
+                video.onloadedmetadata = () => {
+                    if (video.duration > 5) {
+                        video.currentTime = 5;
+                    }
+                };
 
                 stream.getTracks().forEach(track => track.stop());
                 startRecordingButton.disabled = false;
