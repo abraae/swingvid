@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RecordRTC Example</title>
+    <title>RecordRTC with timeSlice</title>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
 <body>
@@ -24,15 +24,10 @@
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             video.srcObject = stream;
 
-            recordedBlobs = [];
             recorder = new RecordRTC(stream, {
                 type: 'video',
-                mimeType: 'video/webm;codecs=vp8',
-                timeSlice: 1000, // Record in slices of 1 second
+                timeSlice: 1000, // 1 second
                 ondataavailable: (blob) => {
-                    if (recordedBlobs.length === 3) {
-                        recordedBlobs.shift(); // Keep only the last 3 seconds
-                    }
                     recordedBlobs.push(blob);
                 }
             });
@@ -44,15 +39,15 @@
 
         stopRecordingButton.onclick = () => {
             recorder.stopRecording(() => {
-                let finalBlob = new Blob(recordedBlobs, { type: 'video/webm' });
-                let url = URL.createObjectURL(finalBlob);
-                
+                // Combine all recorded blobs into one
+                let superBuffer = new Blob(recordedBlobs, { type: 'video/webm' });
+                let url = URL.createObjectURL(superBuffer);
+
                 downloadLink.href = url;
                 downloadLink.download = 'recorded-video.webm';
                 downloadLink.style.display = 'block';
                 video.srcObject = null;
                 video.src = url;
-                video.play();
 
                 stream.getTracks().forEach(track => track.stop());
                 startRecordingButton.disabled = false;
