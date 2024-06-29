@@ -39,9 +39,10 @@
 
         stopRecordingButton.onclick = () => {
             recorder.stopRecording(() => {
-                // Combine all recorded blobs into one
-                let superBuffer = new Blob(recordedBlobs, { type: 'video/webm' });
-                let url = URL.createObjectURL(superBuffer);
+                // Combine only the last four recorded blobs
+                let lastFourBlobs = recordedBlobs.slice(-4);
+                let combinedBlobs = new Blob(lastFourBlobs, { type: 'video/webm' });
+                let url = URL.createObjectURL(combinedBlobs);
 
                 downloadLink.href = url;
                 downloadLink.download = 'recorded-video.webm';
