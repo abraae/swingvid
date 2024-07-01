@@ -79,16 +79,16 @@
                     video.srcObject = null;
                     video.src = url;
 
-                    // Set up the video to start playing 5 seconds into the recording at half speed
+                    // Set up the video to start playing 5 seconds before the end of the recording at half speed
                     video.onloadedmetadata = () => {
                         if (video.duration > 5) {
-                            video.currentTime = 5;
+                            video.currentTime = video.duration - 5;
                         }
                         video.playbackRate = 0.5; // Set playback speed to half
                     };
 
                     video.onended = () => {
-                        video.currentTime = 5;
+                        video.currentTime = video.duration > 5 ? video.duration - 5 : 0;
                         video.play();
                     };
 
